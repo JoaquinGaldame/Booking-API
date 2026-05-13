@@ -53,11 +53,22 @@ export class CreateBookingUseCase {
         statusId: confirmedStatusId,
       });
 
-      await this.availabilityCache.invalidateByProperty(input.propertyId);
+      await this.invalidateAvailabilityCache(input.propertyId);
 
       return booking;
     } finally {
       await this.bookingLock.release(lockKey);
+    }
+  }
+
+  private async invalidateAvailabilityCache(propertyId: string) {
+    try {
+      await this.availabilityCache.invalidateByProperty(propertyId);
+    } catch (error) {
+      console.error("Failed to invalidate availability cache after booking creation", {
+        propertyId,
+        error,
+      });
     }
   }
 }

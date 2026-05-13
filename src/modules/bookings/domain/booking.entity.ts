@@ -13,6 +13,12 @@ export interface Booking {
   statusId: number;
 }
 
+export interface BookingListItem extends Booking {
+  id: string;
+  createdAt: Date;
+  statusCode: BookingStatusCode;
+}
+
 export type BookingStatusCode =
   | "PENDING"
   | "CONFIRMED"

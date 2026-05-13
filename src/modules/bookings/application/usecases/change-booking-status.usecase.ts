@@ -71,8 +71,26 @@ export class ChangeBookingStatusUseCase {
       throw new BookingNotFoundError(input.bookingId);
     }
 
-    await this.availabilityCache.invalidateByProperty(updatedBooking.propertyId);
+    await this.invalidateAvailabilityCache(
+      updatedBooking.propertyId,
+      booking.id
+    );
 
     return updatedBooking;
+  }
+
+  private async invalidateAvailabilityCache(
+    propertyId: string,
+    bookingId: string
+  ) {
+    try {
+      await this.availabilityCache.invalidateByProperty(propertyId);
+    } catch (error) {
+      console.error("Failed to invalidate availability cache after booking status change", {
+        bookingId,
+        propertyId,
+        error,
+      });
+    }
   }
 }

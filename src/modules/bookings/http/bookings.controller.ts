@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { CreateBookingUseCase } from "../application/usecases/create-booking.usecase";
 import { ChangeBookingStatusUseCase } from "../application/usecases/change-booking-status.usecase";
+import { ListBookingsUseCase } from "../application/usecases/list-bookings.usecase";
 import {
   BookingConflictError,
   BookingNotFoundError,
@@ -22,11 +23,40 @@ const createBookingSchema = z.object({
   toDate: z.string().date(),
 });
 
+const listBookingsQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+    fromDate: z.string().date().optional(),
+    toDate: z.string().date().optional(),
+    propertyId: z.string().uuid().optional(),
+  })
+  .refine(
+    (query) =>
+      !query.fromDate || !query.toDate || query.fromDate <= query.toDate,
+    {
+      message: "fromDate must be less than or equal to toDate",
+      path: ["fromDate"],
+    }
+  );
+
 export class BookingsController {
   constructor(
     private readonly createBookingUseCase: CreateBookingUseCase,
-    private readonly changeBookingStatusUseCase: ChangeBookingStatusUseCase
+    private readonly changeBookingStatusUseCase: ChangeBookingStatusUseCase,
+    private readonly listBookingsUseCase: ListBookingsUseCase
   ) {}
+
+  list = async (req: Request, res: Response) => {
+    try {
+      const query = listBookingsQuerySchema.parse(req.query);
+      const result = await this.listBookingsUseCase.execute(query);
+
+      return res.json(result);
+    } catch (error) {
+      return this.handleError(error, res);
+    }
+  };
 
   create = async (req: Request, res: Response) => {
     try {

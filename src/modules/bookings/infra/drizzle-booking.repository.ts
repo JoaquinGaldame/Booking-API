@@ -1,8 +1,16 @@
-import { and, eq, lt, gt } from "drizzle-orm";
+import { SQL, and, desc, eq, gt, lt, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import { bookings, bookingStatuses } from "../../../db/schema";
-import { Booking, BookingStatusCode } from "../domain/booking.entity";
-import { BookingRepository } from "../application/ports/booking.repository";
+import {
+  Booking,
+  BookingListItem,
+  BookingStatusCode,
+} from "../domain/booking.entity";
+import {
+  BookingRepository,
+  ListBookingsFilters,
+  ListBookingsResult,
+} from "../application/ports/booking.repository";
 
 export class DrizzleBookingRepository implements BookingRepository {
   async create(booking: Booking): Promise<Booking> {
@@ -106,5 +114,53 @@ export class DrizzleBookingRepository implements BookingRepository {
       });
 
     return result[0] ?? null;
+  }
+
+  async list(filters: ListBookingsFilters): Promise<ListBookingsResult> {
+    const offset = (filters.page - 1) * filters.limit;
+    const conditions: SQL[] = [];
+
+    if (filters.propertyId) {
+      conditions.push(eq(bookings.propertyId, filters.propertyId));
+    }
+
+    if (filters.fromDate) {
+      conditions.push(gt(bookings.toDate, filters.fromDate));
+    }
+
+    if (filters.toDate) {
+      conditions.push(lt(bookings.fromDate, filters.toDate));
+    }
+
+    const whereClause =
+      conditions.length > 0 ? and(...conditions) : undefined;
+
+    const items = await db
+      .select({
+        id: bookings.id,
+        propertyId: bookings.propertyId,
+        guestName: bookings.guestName,
+        fromDate: bookings.fromDate,
+        toDate: bookings.toDate,
+        statusId: bookings.statusId,
+        createdAt: bookings.createdAt,
+        statusCode: bookingStatuses.code,
+      })
+      .from(bookings)
+      .innerJoin(bookingStatuses, eq(bookings.statusId, bookingStatuses.id))
+      .where(whereClause)
+      .orderBy(desc(bookings.createdAt))
+      .limit(filters.limit)
+      .offset(offset);
+
+    const totalResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(bookings)
+      .where(whereClause);
+
+    return {
+      items: items as BookingListItem[],
+      total: Number(totalResult[0]?.count ?? 0),
+    };
   }
 }

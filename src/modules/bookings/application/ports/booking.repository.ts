@@ -1,4 +1,21 @@
-import { Booking, BookingStatusCode } from "../../domain/booking.entity";
+import {
+  Booking,
+  BookingListItem,
+  BookingStatusCode,
+} from "../../domain/booking.entity";
+
+export interface ListBookingsFilters {
+  page: number;
+  limit: number;
+  fromDate?: string;
+  toDate?: string;
+  propertyId?: string;
+}
+
+export interface ListBookingsResult {
+  items: BookingListItem[];
+  total: number;
+}
 
 export interface BookingRepository {
   create(booking: Booking): Promise<Booking>;
@@ -16,4 +33,6 @@ export interface BookingRepository {
   findStatusCodeById(id: number): Promise<BookingStatusCode | null>;
 
   updateStatus(id: string, statusId: number): Promise<Booking | null>;
+
+  list(filters: ListBookingsFilters): Promise<ListBookingsResult>;
 }
