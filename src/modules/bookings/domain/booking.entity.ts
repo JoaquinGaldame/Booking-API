@@ -12,3 +12,12 @@ export interface Booking {
   toDate: string;
   statusId: number;
 }
+
+export type BookingStatusCode =
+  | "PENDING"
+  | "CONFIRMED"
+  | "CANCELLED"
+  | "EXPIRED"
+  | "CHECKED_IN"
+  | "CHECKED_OUT"
+  | "NO_SHOW";

@@ -1,7 +1,7 @@
 import { and, eq, lt, gt } from "drizzle-orm";
 import { db } from "../../../db";
 import { bookings, bookingStatuses } from "../../../db/schema";
-import { Booking } from "../domain/booking.entity";
+import { Booking, BookingStatusCode } from "../domain/booking.entity";
 import { BookingRepository } from "../application/ports/booking.repository";
 
 export class DrizzleBookingRepository implements BookingRepository {
@@ -25,6 +25,23 @@ export class DrizzleBookingRepository implements BookingRepository {
       });
 
     return result[0];
+  }
+
+  async findById(id: string): Promise<Booking | null> {
+    const result = await db
+      .select({
+        id: bookings.id,
+        propertyId: bookings.propertyId,
+        guestName: bookings.guestName,
+        fromDate: bookings.fromDate,
+        toDate: bookings.toDate,
+        statusId: bookings.statusId,
+      })
+      .from(bookings)
+      .where(eq(bookings.id, id))
+      .limit(1);
+
+    return result[0] ?? null;
   }
 
   async hasOverlappingBooking(params: {
@@ -62,5 +79,32 @@ export class DrizzleBookingRepository implements BookingRepository {
       .limit(1);
 
     return result[0]?.id ?? null;
+  }
+
+  async findStatusCodeById(id: number): Promise<BookingStatusCode | null> {
+    const result = await db
+      .select({ code: bookingStatuses.code })
+      .from(bookingStatuses)
+      .where(eq(bookingStatuses.id, id))
+      .limit(1);
+
+    return (result[0]?.code as BookingStatusCode | undefined) ?? null;
+  }
+
+  async updateStatus(id: string, statusId: number): Promise<Booking | null> {
+    const result = await db
+      .update(bookings)
+      .set({ statusId })
+      .where(eq(bookings.id, id))
+      .returning({
+        id: bookings.id,
+        propertyId: bookings.propertyId,
+        guestName: bookings.guestName,
+        fromDate: bookings.fromDate,
+        toDate: bookings.toDate,
+        statusId: bookings.statusId,
+      });
+
+    return result[0] ?? null;
   }
 }

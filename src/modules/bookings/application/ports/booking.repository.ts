@@ -1,7 +1,9 @@
-import { Booking } from "../../domain/booking.entity";
+import { Booking, BookingStatusCode } from "../../domain/booking.entity";
 
 export interface BookingRepository {
   create(booking: Booking): Promise<Booking>;
+
+  findById(id: string): Promise<Booking | null>;
 
   hasOverlappingBooking(params: {
     propertyId: string;
@@ -10,4 +12,8 @@ export interface BookingRepository {
   }): Promise<boolean>;
 
   findStatusIdByCode(code: string): Promise<number | null>;
+
+  findStatusCodeById(id: number): Promise<BookingStatusCode | null>;
+
+  updateStatus(id: string, statusId: number): Promise<Booking | null>;
 }

@@ -6,7 +6,7 @@ import {
   provinces,
   propertyTypes,
   properties, } from "./schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 async function seed() {
   console.log("Seeding database...");
@@ -134,20 +134,36 @@ async function seed() {
     .limit(1);
 
   if (sanJuan && apartmentType) {
-    await db
-      .insert(properties)
-      .values([
-        {
-          name: "Modern Apartment Downtown",
-          description: "Modern apartment in San Juan city center",
-          provinceId: sanJuan.id,
-          propertyTypeId: apartmentType.id,
-          address: "Av. Ignacio de la Roza 123",
-          maxGuests: 4,
-          basePricePerNight: 120,
-        },
-      ])
-      .onConflictDoNothing();
+    const demoProperties = [
+      {
+        name: "Modern Apartment Downtown",
+        description: "Modern apartment in San Juan city center",
+        provinceId: sanJuan.id,
+        propertyTypeId: apartmentType.id,
+        address: "Av. Ignacio de la Roza 123",
+        maxGuests: 4,
+        basePricePerNight: 120,
+      },
+    ];
+
+    for (const property of demoProperties) {
+      const [existingProperty] = await db
+        .select({ id: properties.id })
+        .from(properties)
+        .where(
+          and(
+            eq(properties.name, property.name),
+            eq(properties.address, property.address)
+          )
+        )
+        .limit(1);
+
+      if (existingProperty) {
+        continue;
+      }
+
+      await db.insert(properties).values(property);
+    }
   }
 
   await pool.end();

@@ -18,3 +18,19 @@ export class BookingStatusNotFoundError extends Error {
     this.name = "BookingStatusNotFoundError";
   }
 }
+
+export class BookingNotFoundError extends Error {
+  constructor(id: string) {
+    super(`Booking not found: ${id}`);
+    this.name = "BookingNotFoundError";
+  }
+}
+
+export class InvalidBookingStatusTransitionError extends Error {
+  constructor(fromStatusCode: string, toStatusCode: string) {
+    super(
+      `Invalid booking status transition from ${fromStatusCode} to ${toStatusCode}`
+    );
+    this.name = "InvalidBookingStatusTransitionError";
+  }
+}
