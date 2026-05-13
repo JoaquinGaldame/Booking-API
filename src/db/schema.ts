@@ -7,6 +7,7 @@ import {
   timestamp,
   index,
   check,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -16,11 +17,46 @@ export const bookingStatuses = pgTable("booking_statuses", {
   name: varchar("name", { length: 100 }).notNull(),
 });
 
+export const countries = pgTable("countries", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  code: varchar("code", { length: 10 }).notNull().unique(),
+  name: varchar("name", { length: 100 }).notNull(),
+});
+
+export const provinces = pgTable("provinces", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+
+  countryId: integer("country_id")
+    .notNull()
+    .references(() => countries.id),
+
+  code: varchar("code", { length: 50 }).notNull(),
+  name: varchar("name", { length: 150 }).notNull(),
+});
+
+export const propertyTypes = pgTable("property_types", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  name: varchar("name", { length: 100 }).notNull(),
+});
+
 export const properties = pgTable("properties", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: varchar("name", { length: 200 }).notNull(),
-  location: varchar("location", { length: 300 }).notNull(),
+  description: varchar("description", { length: 1000 }),
+  provinceId: integer("province_id")
+    .notNull()
+    .references(() => provinces.id),
+
+  propertyTypeId: integer("property_type_id")
+    .notNull()
+    .references(() => propertyTypes.id),
+  maxGuests: integer("max_guests").notNull(),
+  basePricePerNight: integer("base_price_per_night").notNull(),
+  address: varchar("address", { length: 300 }).notNull(),
+  isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const bookings = pgTable(

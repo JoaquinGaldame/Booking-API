@@ -3,7 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import { bookingsRoutes } from "./modules/bookings/http/bookings.routes";
-
+import { propertiesRoutes } from "./modules/properties/http/property.routes";
 
 export const app = express();
 
@@ -19,4 +19,5 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.use("/bookings", bookingsRoutes);
+app.use("/api/bookings", bookingsRoutes);
+app.use("/api/properties", propertiesRoutes);
