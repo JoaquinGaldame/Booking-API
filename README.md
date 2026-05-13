@@ -2,6 +2,8 @@
 
 A production-inspired reservation API built with Node.js, PostgreSQL, and Redis, designed to solve real-world booking challenges such as concurrent reservation conflicts, expensive availability queries, and scalable request handling.
 
+It now includes a frontend demo inside the same repository to visualize cache hits, booking conflicts, and paginated reservation queries against the live API.
+
 ## Project Goal
 
 Design a reservation API that:
@@ -108,6 +110,21 @@ Infrastructure Adapters
     └── Redis
 ```
 
+## Frontend Demo
+
+The repository now includes a single-page frontend focused on demonstrating backend behavior rather than mimicking a marketplace product.
+
+- property inventory browsing
+- property creation
+- availability checks by date range
+- PostgreSQL vs Redis cache source badges
+- booking creation with clear overlap conflict feedback
+- paginated booking listing with optional property and date filters
+
+### Frontend Preview
+
+![Frontend dashboard](docs/images/frontend-dashboard.png)
+
 ### Project Structure
 
 ```text
@@ -188,6 +205,18 @@ booking-api/
               ├─ property.controller.ts
               └─ property.routes.ts
 ```
+
+Additional current folders:
+
+- `docs/images/frontend-dashboard.png`
+- `frontend/`
+- `frontend/src/components`
+- `frontend/src/hooks`
+- `frontend/src/lib`
+- `frontend/src/pages`
+- `frontend/src/services`
+- `frontend/src/types`
+- `src/modules/bookings/application/usecases/list-bookings.usecase.ts`
 
 ## Why Redis?
 
@@ -324,6 +353,18 @@ Result: consistent booking state
 - Docker
 - Docker Compose
 
+### Frontend
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Query
+- Axios
+- React Hook Form
+- Zod
+- lucide-react
+
 ### Architecture
 
 - Hexagonal Architecture
@@ -413,7 +454,7 @@ Note:
 
 ### Option 2: Full stack with Docker Compose
 
-Use this mode if you want the API container to run too.
+Use this mode if you want the frontend, API, PostgreSQL, and Redis together.
 
 ```bash
 docker compose up --build
@@ -421,9 +462,37 @@ docker compose up --build
 
 In this mode:
 
+- `frontend` starts on port `5173`
 - `api` starts on port `3000`
 - `postgres` is exposed on host port `5433`
+- `redis` is exposed on host port `6379`
 - the `api` container runs `npm run db:migrate && npm run db:seed && npm start` on startup
+- the frontend consumes `VITE_API_URL=http://localhost:3000`
+
+Access:
+
+- Frontend: `http://localhost:5173`
+- API: `http://localhost:3000`
+
+### Option 3: Frontend only with Docker Compose
+
+If PostgreSQL, Redis, and the API are already running, you can rebuild only the frontend:
+
+```bash
+docker compose up -d --build frontend
+```
+
+Or start it without rebuilding:
+
+```bash
+docker compose up -d frontend
+```
+
+Logs:
+
+```bash
+docker compose logs -f frontend
+```
 
 ### Seed behavior
 
@@ -454,10 +523,29 @@ docker compose down -v
 
 ### Bookings
 
+- `GET /api/bookings?page=1&limit=20&fromDate=2026-06-01&toDate=2026-06-10&propertyId=uuid`
 - `POST /api/bookings`
 - `POST /api/bookings/:id/check-in`
 - `POST /api/bookings/:id/check-out`
 - `POST /api/bookings/:id/cancel`
+
+### Booking Listing Example
+
+`GET /api/bookings?page=1&limit=8&fromDate=2026-06-01&toDate=2026-06-10`
+
+Response shape:
+
+```json
+{
+  "items": [],
+  "meta": {
+    "page": 1,
+    "limit": 8,
+    "total": 0,
+    "totalPages": 0
+  }
+}
+```
 
 ### Create Booking Example
 
